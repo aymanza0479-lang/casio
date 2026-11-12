@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CASIO fx-991ES PLUS</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#d9d9d9;display:flex;justify-content:center;padding:10px;margin:0}
+.calc{background:#111;width:100%;max-width:390px;border-radius:25px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.top{display:flex;justify-content:space-between;align-items:center;color:#fff}
+.top b{font-size:23px;letter-spacing:2px}
+.solar{width:115px;height:30px;border-radius:4px;background:linear-gradient(90deg,#2d1a08,#6b4423,#2d1a08,#6b4423,#2d1a08)}
+.sub{color:#aaa;text-align:center;font-size:11px;margin:5px 0 10px;letter-spacing:1px}
+.screen{background:#d9e8c0;border-radius:8px;padding:10px;min-height:92px;text-align:right;overflow:hidden}
+#history{font-size:14px;color:#555;min-height:20px;word-break:break-all}
+#mem{font-size:12px;color:#000;font-weight:bold;min-height:16px}
+#display{font-size:38px;font-weight:bold;color:#111;word-break:break-all;line-height:1.1}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:14px}
+button{border:none;border-radius:9px;padding:10px 0;font-size:15px;font-weight:bold;cursor:pointer;color:#fff;background:#333}
+button:active{transform:scale(.94)}
+button small{display:block;font-size:8px;color:#ffcc00;font-weight:normal;line-height:1}
+button i{font-style:normal;font-size:8px;color:#ffcc00;display:block}
+.yellow{background:#ffcc00;color:#111}
+.red{background:#e53935}
+.orange{background:#ff9800}
+.purple{background:#7b1fa2}
+.blue{background:#2196f3}
+.eq{background:#2196f3;font-size:18px}
+.footer{color:#777;text-align:center;font-size:10px;margin-top:10px}
+.shift-on{outline:2px solid #ffcc00}
+</style>
+</head>
+<body>
+<div class="calc">
+<div class="top"><b>CASIO</b><div class="solar"></div></div>
+<div class="sub">fx-991ES PLUS &nbsp; NATURAL-V.P.A.M.</div>
+<div class="screen"><div id="mem"></div><div id="history"></div><div id="display">0</div></div>
+<div class="grid">
+<button id="shiftBtn" class="yellow" onclick="doShift()">SHIFT</button>
+<button class="red" onclick="doAlpha()">ALPHA</button>
+<button onclick="press('ArrowUp')">▲</button>
+<button onclick="press('ArrowDown')">▼</button>
+<button onclick="powerOff()">OFF</button>
+
+<button onclick="press('MODE')">MODE</button>
+<button onclick="press('CALC')">CALC</button>
+<button onclick="press('SOLVE')">SOLVE</button>
+<button onclick="press('ENG')">ENG</button>
+<button onclick="powerOn()">ON</button>
+
+<button onclick="press('sin(')"><i>sin⁻¹</i>sin</button>
+<button onclick="press('cos(')"><i>cos⁻¹</i>cos</button>
+<button onclick="press('tan(')"><i>tan⁻¹</i>tan</button>
+<button onclick="press('sqrt(')"><i>x³</i>√</button>
+<button onclick="press('^')"><i>x!</i>x^</button>
+
+<button onclick="press('log(')"><i>10ˣ</i>log</button>
+<button onclick="press('ln(')"><i>eˣ</i>ln</button>
+<button onclick="press('1/')"><i>a b/c</i>1/x</button>
+<button onclick="press('(')">(</button>
+<button onclick="press(')')">)</button>
+
+<button onclick="doDel()">DEL</button>
+<button class="red" onclick="doAC()">AC</button>
+<button onclick="press('7')">7</button>
+<button onclick="press('8')">8</button>
+<button onclick="press('9')">9</button>
+
+<button class="orange" onclick="press('/')">÷</button>
+<button onclick="press('4')">4</button>
+<button onclick="press('5')">5</button>
+<button onclick="press('6')">6</button>
+<button class="orange" onclick="press('*')">×</button>
+
+<button onclick="press('1')">1</button>
+<button onclick="press('2')">2</button>
+<button onclick="press('3')">3</button>
+<button class="orange" onclick="press('-')">-</button>
+<button class="orange" onclick="press('+')">+</button>
+
+<button onclick="press('.')">.</button>
+<button onclick="press('0')">0</button>
+<button onclick="press('00')">00</button>
+<button onclick="press('(-)')">(-)</button>
+<button class="blue" onclick="doEquals()">=</button>
+
+<button onclick="press('pi')">π</button>
+<button onclick="press('Ans')">Ans</button>
+<button onclick="press('%')">%</button>
+<button onclick="press('e')">e</button>
+<button onclick="press('x')">x</button>
+
+<button class="purple" onclick="doMemory('MC')">MC</button>
+<button class="purple" onclick="doMemory('MR')">MR</button>
+<button class="purple" onclick="doMemory('M+')">M+</button>
+<button class="purple" onclick="doMemory('M-')">M-</button>
+<button class="orange" onclick="doMemory('STO')">STO</button>
+</div>
+<div class="footer">CASIO fx-991ES PLUS - MADE FOR YOU</div>
+</div>
+
+<script>
+let current = "";
+let ans = 0;
+let memoryValue = 0;
+let isOff = false;
+let justCalculated = false;
+let shift = false;
+let alpha = false;
+const displayEl = document.getElementById("display");
+const historyEl = document.getElementById("history");
+const memEl = document.getElementById("mem");
+const shiftBtn = document.getElementById("shiftBtn");
+
+function update(){
+  displayEl.textContent = current === "" ? "0" : current;
+  memEl.textContent = memoryValue !== 0 ? "M   M+ : " + memoryValue : "";
+}
+function isNumberChar(c){ return /[0-9.]/.test(c); }
+
+function evalExpr(expr){
+  try{
+    let e = expr;
+    e = e.replace(/÷/g,"/").replace(/×/g,"*");
+    e = e.replace(/π/g,"Math.PI").replace(/\be\b/g,"Math.E");
+    e = e.replace(/Ans/g,"("+ans+")");
+    e = e.replace(/sin\(/g,"Math.sin(").replace(/cos\(/g,"Math.cos(").replace(/tan\(/g,"Math.tan(");
+    e = e.replace(/asin\(/g,"Math.asin(").replace(/acos\(/g,"Math.acos(").replace(/atan\(/g,"Math.atan(");
+    e = e.replace(/log\(/g,"Math.log10(").replace(/ln\(/g,"Math.log(").replace(/sqrt\(/g,"Math.sqrt(");
+    e = e.replace(/%/g,"/100");
+    e = e.replace(/(-)/g,"-");
+    // x! factorial بسيط
+    e = e.replace(/(\d+)!/g, (m,n)=>{ let f=1; for(let i=2;i<=Number(n);i++) f*=i; return f; });
+    if(e.trim()==="") return 0;
+    let r = Function('"use strict"; return ('+e+')')();
+    if(typeof r!=="number" || !isFinite(r)) return "Error";
+    return Math.round(r*10000000000)/10000000000;
+  }catch{ return "Error"; }
+}
+
+function doShift(){
+  if(isOff) return;
+  shift = !shift; alpha=false;
+  shiftBtn.classList.toggle("shift-on", shift);
+}
+function doAlpha(){
+  if(isOff) return;
+  alpha = !alpha; shift=false;
+  shiftBtn.classList.remove("shift-on");
+}
+
+function press(val){
+  if(isOff) return;
+  if(val==="MODE"||val==="CALC"||val==="SOLVE"||val==="ENG"||val==="ArrowUp"||val==="ArrowDown") return;
+
+  // SHIFT
+  if(shift){
+    if(val==="sin(") val="asin(";
+    if(val==="cos(") val="acos(";
+    if(val==="tan(") val="atan(";
+    if(val==="sqrt(") val="^3";
+    if(val==="^") val="!";
+    if(val==="log(") val="10^(";
+    if(val==="ln(") val="e^(";
+    if(val==="1/") val="^(-1)";
+    shift=false; shiftBtn.classList.remove("shift-on");
+  }
+
+  // لو لسه عامل = وكتبت رقم جديد، امسح القديم - دي اللي كانت بتعمل 14412
+  if(justCalculated){
+    if(isNumberChar(val) || val==="pi" || val==="e" || val==="(" || val==="sin(" || val==="cos(" || val==="tan(" || val==="sqrt(" || val==="log(" || val==="ln("){
+      current = "";
+    }
+    justCalculated = false;
+  }
+
+  if(val==="(-)") val = "-";
+  if(val==="pi") val = "π";
+  if(val==="^3") val = "^3";
+  if(val==="10^(") val = "10^(";
+  if(val==="e^(") val = "e^(";
+  if(val==="^(-1)") val = "^(-1)";
+
+  // منع نقطتين ورا بعض و منع عمليتين ورا بعض
+  let last = current.slice(-1);
+  if(val==="." && current.split(/[\+\-\*\/\(\)]/).pop().includes(".")) return;
+  if(["+","*","/"].includes(val) && ["+","*","/","."].includes(last)) return;
+  if(val==="." && (last==="" || ["+","*","/","("].includes(last))) val="0.";
+
+  current += val;
+  update();
+}
+
+function doEquals(){
+  if(isOff || current==="") return;
+  let result = evalExpr(current);
+  historyEl.textContent = current + " =";
+  current = String(result);
+  if(result!=="Error") ans = result;
+  justCalculated = true;
+  update();
+}
+function doDel(){
+  if(isOff) return;
+  current = current.slice(0,-1);
+  justCalculated = false;
+  update();
+}
+function doAC(){
+  if(isOff){ powerOn(); return; }
+  current=""; historyEl.textContent=""; justCalculated=false; update();
+}
+function powerOff(){
+  isOff=true; displayEl.textContent=""; historyEl.textContent=""; memEl.textContent="";
+}
+function powerOn(){
+  isOff=false; current=""; historyEl.textContent=""; shift=false; shiftBtn.classList.remove("shift-on"); update();
+}
+function doMemory(key){
+  if(isOff) return;
+  if(key==="MC"){ memoryValue=0; historyEl.textContent="Memory Cleared"; }
+  if(key==="MR"){ current=String(memoryValue); historyEl.textContent="MR -> "+memoryValue; justCalculated=false; }
+  if(key==="M+"){ let v=evalExpr(current); if(v!=="Error"){ memoryValue+=Number(v); historyEl.textContent="M+ : "+memoryValue; } }
+  if(key==="M-"){ let v=evalExpr(current); if(v!=="Error"){ memoryValue-=Number(v); historyEl.textContent="M- : "+memoryValue; } }
+  if(key==="STO"){ let v=evalExpr(current); if(v!=="Error"){ memoryValue=Number(v); historyEl.textContent="STO -> "+memoryValue; } }
+  if(key!=="MR") justCalculated=true;
+  update();
+}
+
+// الكيبورد بتاع الكمبيوتر
+document.addEventListener("keydown", e=>{
+  if(e.key>="0" && e.key<="9") press(e.key);
+  if(["+","-","*","/",".","(",")","%","^"].includes(e.key)) press(e.key);
+  if(e.key==="Enter") doEquals();
+  if(e.key==="Backspace") doDel();
+  if(e.key==="Escape") doAC();
+});
+
+update();
+</script>
+</body>
+</html>
